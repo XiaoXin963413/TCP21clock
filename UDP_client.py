@@ -2,7 +2,7 @@ import threading
 import socket
 import json
 MAX_BYTES = 65535
-server_addr = ('192.168.0.118',6000) # Remote server address
+server_addr = ('127.0.0.1',6000) # Remote server address
 # 執行緒send_message()：取得使用者的輸入訊息字串，傳送到Server
 def send_message():
     print('執行緒send_message開始')

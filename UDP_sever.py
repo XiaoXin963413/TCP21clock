@@ -5,7 +5,7 @@ my_port = 6000
 client_list = [] # 存放每個Client資訊的清單
 # 創建一個socket，並bind在指定的address
 sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-sock.bind(('192.168.0.118',my_port))
+sock.bind(('127.0.0.1',my_port))
 print('Listening at {}'.format(sock.getsockname()))
 # 處理來自Client訊息的無窮迴圈
 while(True):
