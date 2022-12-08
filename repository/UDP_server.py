@@ -10,8 +10,11 @@ print('Listening at {}'.format(sock.getsockname()))
 # 處理來自Client訊息的無窮迴圈
 while(True):
   # 接收來自Client的訊息，取得訊息內容(data)與地址資訊(address)
-  data, address = sock.recvfrom(MAX_BYTES)
-  text = data.decode('utf-8')
+    try:
+        data, address = sock.recvfrom(MAX_BYTES)
+    except ConnectionResetError:
+        continue
+    text = data.decode('utf-8')
   print('The client at {} says {!r}'.format(address, text))
   # 將訊息內容由JSON字串轉成dict物件
   message = json.loads(text)
@@ -57,4 +60,40 @@ while(True):
             if client['address'] != address:
                 sock.sendto(data, client['address']) 
                 print('Transfer message to', client['address'] ) # 除錯用
-    
+       ## Leave Request (6): 有一個Client要離開
+    elif message['type'] == 6:
+        # 建立一個暫時的Client dict物件來存放要離開的client資訊
+        new_client = {
+            'nickname': message['nickname'],
+            'address': address
+        }
+        print('Leave Request: ', new_client)
+        # 若這個Client dict物件存在於client_list清單中，
+        # 則將之從client_list中移除
+        if new_client in client_list:
+            client_list.remove(new_client)
+            print('Leave Request: remove successfully') #除錯用
+        else:
+            print('Leave Request: remove failed')
+            pass
+    # 等待並接收Server傳回來的訊息，若為Enter Response則繼續下一步，否則繼續等待
+    is_entered = False
+    while not is_entered:
+      try:  # 擷取recvfrom()的例外狀況
+          data, address = sock.recvfrom(MAX_BYTES)
+          msgdict = json.loads(data.decode('utf-8'))
+          if msgdict['type'] == 2:
+              is_entered = True
+              print('成功進入伺服器!!!')
+      except ConnectionResetError:  # 前一次的sendto()沒有送成功 (Server沒起來)
+          # 印出重送提示訊息，5秒後重新傳送
+          print('伺服器連線失敗，5秒後重試')
+          for i in range(5):
+              time.sleep(1)
+              print('.', end='', flush=True)
+          print()
+          data = json.dumps(msgdict).encode('utf-8')
+          sock.sendto(data, server_addr)
+
+
+        
